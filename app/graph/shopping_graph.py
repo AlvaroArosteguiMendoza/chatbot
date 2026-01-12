@@ -1,90 +1,134 @@
+# app/graph/shopping_graph.py
+
 from typing import TypedDict
-
 from langgraph.graph import StateGraph, END
-
 from app.domain.cart import Cart
-from app.domain.product import list_products
+from app.domain.product import list_products, get_product_by_id
 
 
-class ShoppingState(TypedDict):
-    input: str
+class ShoppingState(TypedDict, total=False):
     intent: str
     cart: Cart
+    product_id: int
+    quantity: int
+    name: str
+    city: str
+    confirm: str
 
 
-def start_node(state: ShoppingState) -> ShoppingState:
-    text = state["input"].lower()
+def start_node(state): return state
 
-    if "producto" in text:
-        state["intent"] = "catalog"
-    elif "añadir" in text:
-        state["intent"] = "add"
-    elif "carrito" in text:
-        state["intent"] = "show_cart"
-    elif "checkout" in text or "finalizar" in text or "comprar" in text:
-        state["intent"] = "checkout"
-    elif "salir" in text:
-        state["intent"] = "end"
-    else:
-        print("❓ No he entendido tu mensaje")
-        state["intent"] = "start"
-
-    return state
-
-
-def catalog_node(state: ShoppingState) -> ShoppingState:
-    print("📦 Productos disponibles:")
+def list_products_node(state):
     for p in list_products():
         print(f"{p.id} - {p.name} ({p.price}€)")
     return state
 
-
-def cart_node(state: ShoppingState) -> ShoppingState:
-    print("🛒 Carrito actual:")
+def add_product_node(state):
+    p = get_product_by_id(state.get("product_id"))
+    if not p:
+        print("❌ Producto no encontrado")
+        return state
+    state["cart"].add_product(p, state.get("quantity", 1))
     print(state["cart"].summary())
     return state
 
+def remove_product_node(state):
+    cart = state["cart"]
+    pid = state.get("product_id")
+    qty = state.get("quantity", 1)
 
-def checkout_node(state: ShoppingState) -> ShoppingState:
-    print("🧾 Resumen del pedido:")
-    print(state["cart"].summary())
-    print("✔ Pedido preparado (simulado)")
+    if pid not in cart.items:
+        print("❌ Ese producto no está en el carrito")
+        return state
+
+    current = cart.items[pid].quantity
+
+    if qty < current:
+        cart.update_quantity(pid, current - qty)
+        print(f"➖ Se han quitado {qty} unidad(es)")
+    else:
+        cart.remove_product(pid)
+        print("🗑️ Producto eliminado")
+
+    print(cart.summary())
     return state
 
 
-def end_node(state: ShoppingState) -> ShoppingState:
+def show_cart_node(state):
+    print(state["cart"].summary())
+    return state
+
+def checkout_node(state):
+    print("🧾 Resumen:")
+    print(state["cart"].summary())
+    return state
+
+def confirm_yes_node(state):
+    print("\n✅ Pedido confirmado")
+    print(state["cart"].summary())
+    print(f"{state['name']} - {state['city']}")
+    return state
+
+def confirm_no_node(state):
+    print("❌ Pedido cancelado. Carrito conservado.")
+    print(state["cart"].summary())
+    return state
+
+def unknown_node(state):
+    print("❓ No he entendido el comando")
+    return state
+
+def end_node(state):
     print("👋 Gracias por usar el chatbot")
     return state
 
 
 def build_graph():
-    graph = StateGraph(ShoppingState)
+    g = StateGraph(ShoppingState)
 
-    graph.add_node("start", start_node)
-    graph.add_node("catalog", catalog_node)
-    graph.add_node("cart", cart_node)
-    graph.add_node("checkout", checkout_node)
-    graph.add_node("end", end_node)
+    for name, fn in [
+        ("start", start_node),
+        ("list_products", list_products_node),
+        ("add_product", add_product_node),
+        ("remove_product", remove_product_node),
+        ("show_cart", show_cart_node),
+        ("checkout", checkout_node),
+        ("confirm_yes", confirm_yes_node),
+        ("confirm_no", confirm_no_node),
+        ("unknown", unknown_node),
+        ("end", end_node),
+    ]:
+        g.add_node(name, fn)
 
-    graph.set_entry_point("start")
+    g.set_entry_point("start")
 
-    graph.add_conditional_edges(
+    g.add_conditional_edges(
         "start",
         lambda s: s["intent"],
         {
-            "catalog": "catalog",
-            "add": "cart",
-            "show_cart": "cart",
+            "list_products": "list_products",
+            "add_product": "add_product",
+            "remove_product": "remove_product",
+            "show_cart": "show_cart",
             "checkout": "checkout",
-            "end": "end",
-            "start": "end",  # si no entiende, termina
+            "confirm_yes": "confirm_yes",
+            "confirm_no": "confirm_no",
+            "exit": "end",
+            "unknown": "unknown",
         },
     )
 
-    graph.add_edge("catalog", END)
-    graph.add_edge("cart", END)
-    graph.add_edge("checkout", END)
-    graph.add_edge("end", END)
+    for n in [
+        "list_products",
+        "add_product",
+        "remove_product",
+        "show_cart",
+        "checkout",
+        "confirm_yes",
+        "confirm_no",
+        "unknown",
+        "end",
+    ]:
+        g.add_edge(n, END)
 
-    return graph.compile()
-
+    return g.compile()

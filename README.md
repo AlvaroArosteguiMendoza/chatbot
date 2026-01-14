@@ -1,68 +1,161 @@
-■ Chatbot Carrito con LangGraph
-Este proyecto es un chatbot de línea de comandos que simula un carrito de compra utilizando una
-máquina de estados construida con LangGraph.
-Características
+# 🛒 Chatbot Carrito con LangGraph
+
+Este proyecto es un chatbot de línea de comandos que simula un **carrito de compra** utilizando una **máquina de estados** construida con **LangGraph**.
+
+El usuario puede navegar por productos, añadir y quitar artículos, ver el carrito y completar o cancelar un pedido sin perder su estado.
+
+---
+
+## 🚀 Características
+
 - Máquina de estados con LangGraph
-- Carrito persistente en memoria
+- Carrito persistente
 - Confirmación sí / no al finalizar
 - Cancelar no borra el carrito
 - CLI simple y robusto
 - Tests automáticos con Pytest
 
-  
-Instalación
+---
+
+## 📦 Stack Técnico
+
+- Python 3.10+
+- pip
+- Entorno virtual recomendado
+
+---
+
+## 🔧 Instalación
+
+Clona el repositorio:
+
+```bash
 git clone https://github.com/AlvaroArosteguiMendoza/chatbot-carrito-langgraph.git
 cd chatbot-carrito-langgraph
-Crear entorno virtual - Windows
+Crea y activa un entorno virtual:
+
+Si es en Windows:
 python -m venv venv
 venv\Scripts\activate
-Crear entorno virtual - Linux / Mac
+
+Si es en Linux / Mac
 python -m venv venv
 source venv/bin/activate
-Instalar dependencias
+```
+
+Instala dependencias:
+
 pip install langgraph pytest
 
-Ejecutar el chatbot
+▶️ Ejecutar el chatbot
+```bash
 python -m app.cli
+```
 
-Comandos disponibles
-productos
-añadir <id> <cantidad>
-quitar <id> <cantidad>
-carrito
-finalizar
-salir
+Aparecerá:
 
+🛒 CHATBOT CARRITO DE COMPRA
+────────────────────────────────
+>
 
-Ejemplo de uso
+💬 Comandos disponibles
+Comando	Descripción
+productos	Muestra todos los productos
+añadir <id> <cantidad>	Añade productos al carrito
+quitar <id> <cantidad>	Quita unidades o elimina un producto
+carrito	Muestra el carrito
+finalizar	Inicia el proceso de compra
+salir	Cierra el programa
+🧪 Ejemplo de uso
 > productos
 1 - Camiseta azul (19.99€)
+
 > añadir 1 2
 Camiseta azul x 2 = 39.98€
+
+> quitar 1 1
+Camiseta azul x 1 = 19.99€
+
+> finalizar
+¿Confirmas? (si/no): no
+❌ Pedido cancelado. Carrito conservado.
+
+> carrito
+Camiseta azul x 1 = 19.99€
+
 > finalizar
 ¿Confirmas? (si/no): si
-■ Pedido confirmado
+✅ Pedido confirmado
 
+🧪 Ejecutar los tests
 
-Ejecutar tests
+Desde la raíz:
+```bash
 pytest -v
+```
+
+Salida esperada:
+
+5 passed
 
 
-Estructura del proyecto
+Los tests verifican:
+
+Añadir productos
+
+Eliminar productos
+
+Actualizar cantidades
+
+Calcular total
+
+Eliminar cuando la cantidad es 0
+
+🗂 Estructura del proyecto
 app/
-■■■ cli.py
-■■■ domain/
-■ ■■■ cart.py
-■ ■■■ product.py
-■■■ graph/
- ■■■ shopping_graph.py
-test/
-■■■ test_cart.py
+├── cli.py
+├── domain/
+│   ├── cart.py
+│   └── product.py
+└── graph/
+    └── shopping_graph.py
 
-Arquitectura
+test/
+└── test_cart.py
+
+🧠 Arquitectura
+
+El sistema funciona como una máquina de estados:
+
 Usuario → Parser → Estado → LangGraph → Nodo → Respuesta → CLI
 
-Autor
-Proyecto desarrollado por Álvaro como práctica de arquitectura limpia, state machines, LangGraph
-y testing en Python.
 
+LangGraph controla las transiciones entre:
+
+Añadir
+
+Quitar
+
+Mostrar
+
+Checkout
+
+Confirmación
+
+Cancelación
+
+Salida
+
+
+
+
+
+Proyecto desarrollado por Álvaro como práctica de:
+
+    Arquitectura limpia
+
+    State machines
+
+    LangGraph
+
+    Testing en Python

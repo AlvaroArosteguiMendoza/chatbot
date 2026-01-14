@@ -10,7 +10,18 @@ def main():
     graph = build_graph()
     state = {"cart": cart}
 
-    print("🛒 Chatbot carrito")
+    print("""
+🛒 CHATBOT CARRITO DE COMPRA
+────────────────────────────────
+Comandos disponibles:
+• productos              → Ver catálogo
+• añadir <id> <cantidad> → Añadir producto
+• quitar <id> <cantidad> → Quitar producto
+• carrito                → Ver carrito
+• finalizar              → Finalizar compra
+• salir                  → Salir del programa
+────────────────────────────────
+""")
 
     while True:
         user = input("> ")
